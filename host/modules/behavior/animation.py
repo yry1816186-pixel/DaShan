@@ -23,7 +23,7 @@ class Expression(IntEnum):
     CONFUSED = 0x08
     CURIOUS = 0x09
     SHY = 0x0A
-    ANGRY = 0x0C
+    ANGRY = 0x0B
     LOVE = 0x0C
     TIRED = 0x0D
     EXCITED = 0x0E

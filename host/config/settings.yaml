@@ -1,0 +1,48 @@
+serial:
+  port: COM3
+  baudrate: 115200
+  timeout: 2.0
+
+llm:
+  api_key: ""
+  model: glm-4
+  base_url: https://open.bigmodel.cn/api/paas/v4/chat/completions
+  temperature: 0.7
+  max_tokens: 1000
+  top_p: 0.9
+  timeout: 30
+
+voice:
+  wake_word: 瓦力
+  wake_threshold: 0.5
+  sample_rate: 16000
+  channels: 1
+  chunk_size: 1024
+  language: zh
+  stt_model: base
+  tts_model: zh_CN-xiaoyan-low
+  tts_sample_rate: 22050
+
+vision:
+  enabled: true
+  camera_index: 0
+  width: 640
+  height: 480
+  fps: 15
+  face_detection_model: hog
+  min_face_size: 50
+  gaze_tracking: true
+
+behavior:
+  idle_timeout: 30.0
+  random_behavior_interval: 15.0
+  animation_duration: 0.5
+  blink_interval_min: 2.0
+  blink_interval_max: 5.0
+
+log:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  log_dir: data/logs
+  max_size: 10485760
+  backup_count: 5

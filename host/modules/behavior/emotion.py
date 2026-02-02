@@ -19,6 +19,7 @@ class Emotion(IntEnum):
     EXCITED = 7
     CONFUSED = 8
     TIRED = 9
+    LOVE = 10
 
 
 @dataclass
@@ -183,7 +184,8 @@ class EmotionToExpressionMapper:
             Emotion.CURIOUS: 0x09,
             Emotion.EXCITED: 0x0E,
             Emotion.CONFUSED: 0x08,
-            Emotion.TIRED: 0x0D
+            Emotion.TIRED: 0x0D,
+            Emotion.LOVE: 0x0C
         }
 
     def map(self, emotion: Emotion) -> int:

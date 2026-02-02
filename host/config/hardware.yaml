@@ -1,0 +1,63 @@
+controller:
+  type: ESP32-S3
+  model: ESP32-S3-WROOM-1-N8R8
+  flash_size: 16MB
+  psram: 8MB
+
+display:
+  type: OLED
+  model: SSD1306
+  size: 128x64
+  i2c_address: 0x3C
+
+servo:
+  type: PWM
+  model: MG996R
+  count: 2
+  min_angle: 30
+  max_angle: 150
+  default_speed: 50
+
+camera:
+  type: OV5640
+  resolution: 640x480
+  fps: 15
+  interface: I2S
+
+audio:
+  mic:
+    type: I2S
+    model: ICS-43432
+    sample_rate: 16000
+  speaker:
+    type: PWM
+    power: 3W
+    impedance: 4ohm
+
+sensors:
+  distance:
+    type: TOF
+    model: VL53L0X
+    interface: I2C
+    address: 0x29
+  light:
+    type: ADC
+    pin: GPIO4
+  touch:
+    type: capacitive
+    pins: [GPIO0, GPIO14]
+
+power:
+  battery:
+    type: Li-ion
+    voltage: 3.7V
+    capacity: 2000mAh
+  charging:
+    chip: TP4056
+    voltage: 5V
+    current: 500mA
+
+communication:
+  primary: USB-C
+  backup: ESP-NOW
+  baudrate: 115200

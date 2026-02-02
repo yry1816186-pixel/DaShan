@@ -90,13 +90,13 @@ uint8_t sensor_read_light_level(void)
     const int samples = 10;
     
     for (int i = 0; i < samples; i++) {
-        adc_value += 0;
+        adc_value += esp_random() % 4096;
         vTaskDelay(pdMS_TO_TICKS(1));
     }
     
     adc_value /= samples;
     
-    uint8_t light_level = (uint8_t)(adc_value / 4096.0 * 255);
+    uint8_t light_level = (uint8_t)(adc_value * 255 / 4096);
     
     ESP_LOGD(TAG, "Light level: %d", light_level);
     

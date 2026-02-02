@@ -19,34 +19,12 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-.venv/
+
+# Virtual Environment
 venv/
 ENV/
 env/
-
-# C
-*.o
-*.obj
-*.elf
-*.a
-*.lib
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
-
-# ESP-IDF
-build/
-sdkconfig
-sdkconfig.old
-dependencies.lock
+.venv
 
 # IDE
 .vscode/
@@ -56,31 +34,29 @@ dependencies.lock
 *~
 .DS_Store
 
-# 敏感配置
-host/config/api_keys.yaml
-*.key
-*.pem
-config.yaml
-secrets.yaml
-
-# 日志
-*.log
+# Project specific
+data/
 logs/
-
-# 临时文件
-tmp/
-temp/
-*.tmp
-
-# .trae 目录
-.trae/
-
-# 模型文件和缓存
-*.bin
-*.tflite
-*.onnx
-*.safetensors
-*.pt
-*.pth
 models/
-cache/
+*.log
+*.db
+*.sqlite
+
+# Config with secrets
+host/config/api_keys.yaml
+*.secret
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ESP-IDF
+build/
+sdkconfig
+sdkconfig.old
+
+# OS
+Thumbs.db
+.DS_Store

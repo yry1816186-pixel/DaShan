@@ -87,7 +87,10 @@ class SerialProtocol:
         for byte in data:
             crc ^= byte
             for _ in range(8):
-                crc = (crc & 0x80) ? (crc << 1) ^ 0x07 : crc << 1
+                if crc & 0x80:
+                    crc = (crc << 1) ^ 0x07
+                else:
+                    crc = crc << 1
         return crc & 0xFF
 
     @staticmethod
