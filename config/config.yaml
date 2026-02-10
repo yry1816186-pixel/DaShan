@@ -1,0 +1,64 @@
+serial_port: COM3
+baudrate: 115200
+
+llm:
+  model: glm-4
+  api_key: ""
+  base_url: https://open.bigmodel.cn/api/paas/v4/chat/completions
+  temperature: 0.7
+  max_tokens: 2000
+  timeout: 30.0
+
+voice:
+  stt:
+    model_name: base
+    sample_rate: 16000
+    channels: 1
+    chunk_size: 1024
+    vad_aggressiveness: 2
+    language: zh
+  
+  tts:
+    engine: edge
+    voice: zh-CN-XiaoxiaoNeural
+    sample_rate: 24000
+    buffer_size: 8192
+
+web:
+  host: 0.0.0.0
+  port: 8000
+  enable_cors: true
+
+rag:
+  store_type: chromadb
+  persist_directory: ./data/knowledge_db
+  embedding_model: shibing624/text2vec-base-chinese
+  chunk_size: 500
+  chunk_overlap: 50
+
+multimodal:
+  clip_model: openai/clip-vit-base-patch32
+  device: auto
+  fusion_method: weighted_sum
+  text_weight: 0.5
+  image_weight: 0.3
+  audio_weight: 0.2
+
+behavior_tree:
+  tick_interval: 0.016
+  idle_timeout: 300
+
+logging:
+  level: INFO
+  format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+
+knowledge_base:
+  auto_load: true
+  directories:
+    - ./data/documents
+  files:
+    - ./docs/README.md
+
+plugins:
+  enabled: true
+  directory: ./plugins
