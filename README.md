@@ -1,40 +1,102 @@
-# DaShan 桌宠机器人系统
+# DaShan V2.0 桌宠机器人系统
 
-> 一款智能交互式桌面宠物机器人，支持语音对话、视觉追踪、情感表达等功能
+> 工程级AI桌面宠物机器人系统，支持LangGraph Agent、RAG知识库、行为树、实时语音、Web仪表板、多模态融合、BLE/OTA和插件系统
 
-[![Python Version](https://img.shields.io/badge/python-3.9%2B-blue)](https://www.python.org/downloads/)
+[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Status](https://img.shields.io/badge/status-beta-orange)]()
+[![Status](https://img.shields.io/badge/status-v2.0%20Release-brightgreen)]()
+
+## V2.0 新特性
+
+### 🧠 LangGraph Agent框架
+- 基于LangGraph的多步推理系统
+- StateGraph有向图工作流
+- 工具调用和知识检索集成
+- 意图分类和响应生成
+
+### 📚 RAG知识库系统
+- ChromaDB持久化向量数据库
+- FAISS高性能向量搜索
+- 中文文本嵌入 (shibing624/text2vec-base-chinese)
+- 智能文档检索和分块
+
+### 🌳 行为树系统
+- 替代传统简单状态机
+- Sequence/Selector/Parallel/Decorator节点
+- 60Hz Tick-based执行
+- 复杂行为编排能力
+
+### 🎙️ 实时语音系统
+- RealtimeSTT流式语音识别
+- WebRTC VAD语音活动检测
+- Edge-TTS/Piper流式语音合成
+- 回声消除和降噪
+
+### 🌐 Web仪表板
+- FastAPI + WebSocket实时通信
+- 内嵌HTML监控界面
+- 实时日志和系统状态
+- 远程控制和配置
+
+### 🎭 多模态融合
+- CLIP文本-图像编码
+- 加权求和融合
+- 注意力机制融合
+- 情感识别
+
+### 📡 BLE通信
+- Bluetooth Low Energy支持
+- GATT服务实现
+- 无线控制和监控
+- 移动设备连接
+
+### 🔄 OTA固件更新
+- HTTP固件下载
+- OTA分区管理
+- 校验和验证
+- 自动重启
+
+### 🔌 插件系统
+- 可扩展的插件架构
+- Command/Filter/Provider/Extension插件类型
+- 插件生命周期管理
+- 动态加载和卸载
 
 ## 功能特性
 
-- 语音交互：自定义唤醒词、语音识别、TTS语音合成
+- 语音交互：流式语音识别、VAD检测、TTS语音合成
 - 视觉追踪：人脸检测与追踪、注视点计算
 - 情感表达：多种表情动画、LED/OLED显示
-- 对话系统：支持多种LLM模型（智谱GLM、OpenAI等）
-- 智能行为：状态机驱动的智能行为规划
+- 对话系统：LangGraph Agent + RAG知识检索
+- 智能行为：行为树驱动的智能行为规划
 - 模块化设计：松耦合架构，易于扩展和维护
 
-## 系统架构
+## 系统架构 V2.0
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                         主机端                              │
+│                         主机端 V2.0                        │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
-│  │  语音模块    │  │  视觉模块    │  │  对话模块    │     │
+│  │ Agent框架   │  │ RAG系统    │  │ 多模态融合  │     │
 │  └──────────────┘  └──────────────┘  └──────────────┘     │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
-│  │ 行为模块    │  │ 事件总线    │  │ 配置管理    │     │
+│  │ 行为树系统  │  │ 实时语音    │  │ Web仪表板   │     │
+│  └──────────────┘  └──────────────┘  └──────────────┘     │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
+│  │ 插件系统    │  │ 协议客户端  │  │ 事件总线    │     │
 │  └──────────────┘  └──────────────┘  └──────────────┘     │
 │                          │                                  │
 └──────────────────────────┼──────────────────────────────────┘
-                           │ USB-C / 串口
+                           │ USB-C / BLE
 ┌──────────────────────────┼──────────────────────────────────┐
 │                          │                                  │
 │  ┌──────────────┐  ┌────┴────┐  ┌──────────────┐         │
-│  │  显示系统    │  │ 控制核心 │  │ 传感器      │         │
-│  │  (OLED/LED)  │  │(ESP32-S3)│  │ (TOF/光敏)  │         │
-│  └──────────────┘  └─────────┘  └──────────────┘         │
+│  │ BLE管理器    │  │ 控制核心 │  │ OTA管理器   │         │
+│  └──────────────┘  │(ESP32-S3)│  └──────────────┘         │
+│  ┌──────────────┐  └─────────┘  ┌──────────────┐         │
+│  │  显示系统    │               │  传感器      │         │
+│  │  (OLED/LED)  │               │ (TOF/光敏)  │         │
+│  └──────────────┘               └──────────────┘         │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │
 │  │  运动系统    │  │ 音频系统    │  │ 摄像头      │    │
 │  │ (MG996R舵机) │  │ (I2S音频)   │  │  (OV5640)   │    │
@@ -66,7 +128,7 @@
 
 ### 环境要求
 
-- Python 3.9+
+- Python 3.10+
 - ESP-IDF 5.0+
 - Windows/Linux/macOS
 
@@ -89,19 +151,20 @@ cp host/config/api_keys.template.yaml host/config/api_keys.yaml
 # 编辑api_keys.yaml，填入你的LLM API密钥
 ```
 
-4. 配置串口
+4. 配置系统
 ```bash
-# 编辑 host/config/settings.yaml，设置serial.port
+# 编辑 config/config.yaml，设置串口和其他配置
 serial:
   port: COM3  # Windows: COMx, Linux: /dev/ttyUSBx
+  baudrate: 115200
 ```
 
-5. 运行系统
+5. 运行系统 V2.0
 ```bash
-python -m host.main
+python -m host.main_v2
 ```
 
-### 编译Robot固件
+### 编译Robot固件 V2.0
 
 ```bash
 cd robot
@@ -114,21 +177,36 @@ idf.py -p COM3 flash monitor
 
 ```
 DaShan/
-├── host/              # 主机端Python代码
+├── host/              # 主机端Python代码 V2.0
 │   ├── core/         # 核心模块
-│   │   ├── config.py      # 配置管理
-│   │   ├── event_bus.py   # 事件总线
-│   │   └── state_machine.py # 状态机
+│   │   ├── agent/            # Agent框架
+│   │   ├── rag/              # RAG系统
+│   │   ├── behavior_tree/    # 行为树系统
+│   │   ├── multimodal/       # 多模态融合
+│   │   └── config.py
 │   ├── modules/      # 功能模块
 │   │   ├── voice/        # 语音模块
 │   │   ├── vision/       # 视觉模块
 │   │   ├── dialogue/     # 对话模块
 │   │   ├── behavior/     # 行为模块
 │   │   └── protocol/     # 协议通信
+│   ├── web/          # Web仪表板
+│   │   ├── api.py
+│   │   └── websocket.py
+│   ├── plugins/      # 插件系统
+│   │   ├── plugin_base.py
+│   │   ├── plugin_manager.py
+│   │   ├── plugin_loader.py
+│   │   └── examples/
 │   ├── config/       # 配置文件
 │   └── tests/        # 单元测试
-├── robot/             # 机器人端固件
+├── robot/             # 机器人端固件 V2.0
 │   └── main/         # ESP32主程序
+│       ├── ble_manager.c/h    # BLE管理器
+│       └── ota_manager.c/h    # OTA管理器
+├── tests/             # 测试套件
+├── config/            # 配置文件
+│   └── config.yaml
 ├── docs/              # 文档
 └── scripts/           # 脚本工具
 ```

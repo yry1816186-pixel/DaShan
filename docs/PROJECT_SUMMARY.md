@@ -1,8 +1,64 @@
-# DaShan 项目总结
+# DaShan V2.0 项目总结
 
 ## 项目概述
 
-DaShan 是一个高性能、可扩展的 AI 桌宠机器人系统，采用"表演层+大脑层"的双架构设计。项目名称取自"大山"，寓意稳重、可靠、持久。
+DaShan V2.0 是一个工程级 AI 桌宠机器人系统，采用"表演层+大脑层"的双架构设计。项目名称取自"大山"，寓意稳重、可靠、持久。V2.0版本在原有基础上进行了全面的工程级升级，引入了多项前沿技术和架构改进。
+
+## V2.0 新特性
+
+### 🧠 LangGraph Agent框架
+- 基于LangGraph的多步推理系统
+- StateGraph有向图工作流
+- 工具调用和知识检索集成
+- 意图分类和响应生成
+
+### 📚 RAG知识库系统
+- ChromaDB持久化向量数据库
+- FAISS高性能向量搜索
+- 中文文本嵌入 (shibing624/text2vec-base-chinese)
+- 智能文档检索和分块
+
+### 🌳 行为树系统
+- 替代传统简单状态机
+- Sequence/Selector/Parallel/Decorator节点
+- 60Hz Tick-based执行
+- 复杂行为编排能力
+
+### 🎙️ 实时语音系统
+- RealtimeSTT流式语音识别
+- WebRTC VAD语音活动检测
+- Edge-TTS/Piper流式语音合成
+- 回声消除和降噪
+
+### 🌐 Web仪表板
+- FastAPI + WebSocket实时通信
+- 内嵌HTML监控界面
+- 实时日志和系统状态
+- 远程控制和配置
+
+### 🎭 多模态融合
+- CLIP文本-图像编码
+- 加权求和融合
+- 注意力机制融合
+- 情感识别
+
+### 📡 BLE通信
+- Bluetooth Low Energy支持
+- GATT服务实现
+- 无线控制和监控
+- 移动设备连接
+
+### 🔄 OTA固件更新
+- HTTP固件下载
+- OTA分区管理
+- 校验和验证
+- 自动重启
+
+### 🔌 插件系统
+- 可扩展的插件架构
+- Command/Filter/Provider/Extension插件类型
+- 插件生命周期管理
+- 动态加载和卸载
 
 ## 核心特性
 
@@ -22,19 +78,20 @@ DaShan 是一个高性能、可扩展的 AI 桌宠机器人系统，采用"表�
 - 动画节奏同步
 
 ### 🧠 强大AI大脑
-- GLM-4.7 大语言模型
+- GLM-4 大语言模型
+- RAG知识检索
 - 长期记忆管理
 - 个性化对话
 
 ### 🔊 离线语音
-- openWakeWord 本地唤醒
-- Whisper 语音识别
-- Piper 语音合成
+- RealtimeSTT流式识别
+- Edge-TTS/Piper语音合成
+- VAD语音活动检测
 
 ### 📷 多模态感知
-- 摄像头视觉
-- 红外距离传感
-- 环境光感知
+- CLIP文本-图像理解
+- 情感识别
+- 环境感知
 
 ## 技术架构
 
@@ -72,13 +129,16 @@ DaShan 是一个高性能、可扩展的 AI 桌宠机器人系统，采用"表�
 DaShan/
 ├── README.md                    # 项目说明
 ├── requirements.txt             # Python依赖
+├── pytest.ini                   # 测试配置
+├── config/                      # 配置文件
+│   └── config.yaml             # 主配置文件
 ├── docs/                       # 文档
 │   ├── HARDWARE.md            # 硬件清单
 │   ├── INSTALLATION.md        # 安装指南
-│   ├── ARCHITECTURE.md       # 架构设计
-│   ├── PROTOCOL.md           # 通信协议
-│   └── PROJECT_SUMMARY.md    # 项目总结
-├── robot/                      # 机器人端
+│   ├── ARCHITECTURE.md       # 架构设计 V2.0
+│   ├── PROTOCOL.md           # 通信协议 V2.0
+│   └── PROJECT_SUMMARY.md    # 项目总结 V2.0
+├── robot/                      # 机器人端 V2.0
 │   └── main/
 │       ├── main.c
 │       ├── protocol.h/c
@@ -87,24 +147,79 @@ DaShan/
 │       ├── state_machine.h/c
 │       ├── camera.h/c
 │       ├── audio.h/c
-│       └── sensor.h/c
-└── host/                       # 主机端
-    ├── main.py                # 主控制器
-    ├── config/
-    │   └── api_keys.yaml      # 配置文件
-    └── modules/
-        ├── protocol/
-        │   └── serial_com.py
-        ├── voice/
-        │   ├── wake_word.py
-        │   ├── stt.py
-        │   └── tts.py
-        ├── dialogue/
-        │   ├── llm.py
-        │   └── memory.py
-        └── behavior/
-            ├── animation.py
-            └── emotion.py
+│       ├── sensor.h/c
+│       ├── ble_manager.h/c    # BLE管理器
+│       └── ota_manager.h/c    # OTA管理器
+├── host/                       # 主机端 V2.0
+│   ├── main_v2.py             # 主控制器 V2.0
+│   ├── main.py                # 主控制器 V1.0
+│   ├── core/
+│   │   ├── agent/            # Agent框架
+│   │   │   ├── agent_graph.py
+│   │   │   ├── agent_state.py
+│   │   │   ├── agent_config.py
+│   │   │   └── tool_registry.py
+│   │   ├── rag/              # RAG系统
+│   │   │   ├── knowledge_manager.py
+│   │   │   ├── vector_store.py
+│   │   │   ├── embedding_service.py
+│   │   │   └── document_processor.py
+│   │   ├── behavior_tree/    # 行为树系统
+│   │   │   ├── behavior_tree.py
+│   │   │   ├── nodes.py
+│   │   │   ├── decorators.py
+│   │   │   ├── leaf_nodes.py
+│   │   │   └── dashan_nodes.py
+│   │   ├── multimodal/       # 多模态融合
+│   │   │   ├── clip_encoder.py
+│   │   │   ├── multimodal_fusion.py
+│   │   │   ├── vision_language.py
+│   │   │   └── emotion_recognition.py
+│   │   └── config.py
+│   ├── modules/
+│   │   ├── voice/
+│   │   │   ├── realtime_stt.py
+│   │   │   ├── streaming_tts.py
+│   │   │   ├── wake_word.py
+│   │   │   ├── stt.py
+│   │   │   └── tts.py
+│   │   ├── dialogue/
+│   │   │   ├── llm.py
+│   │   │   └── memory.py
+│   │   ├── protocol/
+│   │   │   └── serial_com.py
+│   │   ├── vision/
+│   │   │   ├── camera.py
+│   │   │   ├── face_tracker.py
+│   │   │   └── gaze_tracking.py
+│   │   └── behavior/
+│   │       ├── animation.py
+│   │       └── emotion.py
+│   ├── web/
+│   │   ├── api.py           # FastAPI应用
+│   │   └── websocket.py     # WebSocket处理
+│   ├── plugins/
+│   │   ├── plugin_base.py
+│   │   ├── plugin_manager.py
+│   │   ├── plugin_loader.py
+│   │   └── examples/
+│   │       ├── hello_plugin.py
+│   │       ├── memory_plugin.py
+│   │       └── content_filter.py
+│   ├── tests/
+│   ├── config/
+│   │   └── api_keys.yaml
+│   └── config/
+│       ├── __init__.py
+│       ├── api_keys.template.yaml
+│       ├── hardware.yaml
+│       └── settings.yaml
+└── tests/                      # 测试套件
+    ├── __init__.py
+    ├── test_agent.py
+    ├── test_behavior_tree.py
+    ├── test_plugins.py
+    └── test_integration.py
 ```
 
 ## 硬件清单

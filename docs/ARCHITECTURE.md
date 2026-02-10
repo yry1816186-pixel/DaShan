@@ -1,149 +1,215 @@
-# DaShan 系统架构文档
+# DaShan V2.0 系统架构文档
 
 ## 概述
 
-DaShan采用分布式架构，分为主机端（Python）和机器人端（ESP32-S3固件），通过串口/USB-C通信。
+DaShan V2.0 采用分布式架构，分为主机端（Python）和机器人端（ESP32-S3固件），通过串口/USB-C/BLE通信。V2.0版本引入了多项工程级改进，包括LangGraph Agent框架、RAG知识库、行为树系统、实时语音交互、Web仪表板、多模态融合、BLE/OTA固件升级和插件系统。
 
 ## 系统架构图
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                              主机端                                │
+│                              主机端 V2.0                            │
 │  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │                        主程序 (main.py)                      │   │
+│  │                    主程序 (main_v2.py)                        │   │
 │  └────────────────────┬────────────────────────────────────────────┘   │
 │                     │                                             │
 │  ┌──────────────────┴──────────────────────────────────────────────┐   │
-│  │                      事件总线                                │   │
-│  │  - 消息分发                                                  │   │
-│  │  - 模块解耦                                                  │   │
-│  └──────────────────┬──────────────────────────────────────────────┘   │
-│                     │                                             │
-│  ┌──────────────────┴──────────────────────────────────────────────┐   │
-│  │                    状态机                                  │   │
-│  │  - 状态管理                                                  │   │
-│  │  - 转换逻辑                                                  │   │
+│  │                   行为树系统 (Behavior Tree)                  │   │
+│  │  - Sequence/Selector/Parallel/Decorator Nodes                 │   │
+│  │  - Tick-based Execution (60Hz)                                │   │
 │  └──────────────────┬──────────────────────────────────────────────┘   │
 │                     │                                             │
 │       ┌─────────────┼─────────────┐                              │
 │       │             │             │                              │
 │  ┌────┴────┐   ┌───┴────┐   ┌───┴────┐                      │
-│  │ 语音模块 │   │ 视觉模块 │   │ 对话模块 │                      │
-│  │ - 唤醒词 │   │ - 摄像头 │   │ - LLM   │                      │
-│  │ - STT   │   │ - 人脸   │   │ - 记忆  │                      │
-│  │ - TTS   │   │ - 注视   │   │         │                      │
+│  │Agent框架 │   │RAG系统 │   │多模态融合│                    │
+│  │-LangGraph│   │-ChromaDB│   │-CLIP编码│                    │
+│  │-StateGraph│   │-FAISS  │   │-Vision-L│                    │
+│  │-Tools    │   │-Embedding│   │-Emotion│                    │
 │  └────┬────┘   └───┬────┘   └───┬────┘                      │
 │       │             │             │                              │
 │  ┌────┴────┐   ┌───┴────┐   ┌───┴────┐                      │
-│  │ 行为模块 │   │ 配置管理 │   │ 通信模块 │                      │
-│  │ - 表情  │   │ - YAML   │   │ - 串口  │                      │
-│  │ - 动画  │   │ - 验证  │   │ - 协议  │                      │
-│  └─────────┘   └─────────┘   └─────────┘                      │
-└────────────────────────────────┬────────────────────────────────────┘
-                             │ USB-C / 串口 (115200 bps)
-┌────────────────────────────┬┴─────────────────────────────────────┐
-│                            │                                    │
-│  ┌─────────────────────────┴──────────────────────────────────┐   │
-│  │                    ESP32-S3 固件                         │   │
-│  └───────────────────────┬─────────────────────────────────────┘   │
-│                          │                                       │
-│       ┌───────────────────┼──────────────────┐                    │
-│       │                   │                  │                    │
-│  ┌────┴────┐        ┌───┴────┐      ┌───┴────┐             │
-│  │ 显示系统 │        │ 运动系统 │      │ 音频系统 │             │
-│  │ - OLED  │        │ - 舵机  │      │ - I2S   │             │
-│  │ - LED   │        │ - PWM   │      │ - 麦克风│             │
-│  │         │        │         │      │ - 扬声器│             │
-│  └─────────┘        └─────────┘      └─────────┘             │
-│                                                            │
-│  ┌────────────────────────────────────────────────────────┐    │
-│  │                   传感器系统                          │    │
-│  │  - TOF距离传感器 (VL53L0X)                          │    │
-│  │  - 光敏传感器 (GL5528)                              │    │
-│  │  - 触摸传感器 (TTP223)                              │    │
-│  │  - 电池电压监测                                     │    │
-│  └────────────────────────────────────────────────────────┘    │
-│                                                            │
-│  ┌────────────────────────────────────────────────────────┐    │
-│  │                   摄像头系统                          │    │
-│  │  - OV5640摄像头                                      │    │
-│  │  - DVP接口                                           │    │
-│  │  - 图像缓存                                          │    │
-│  └────────────────────────────────────────────────────────┘    │
-│                                                            │
-│  ┌────────────────────────────────────────────────────────┐    │
-│  │                   状态机与协议                       │    │
-│  │  - 状态管理                                         │    │
-│  │  - 消息解析                                         │    │
-│  │  - CRC校验                                          │    │
-│  │  - 命令处理                                         │    │
-│  └────────────────────────────────────────────────────────┘    │
-└────────────────────────────────────────────────────────────────┘
+│  │实时语音 │   │Web仪表板│   │插件系统│                      │
+│  │-VAD     │   │-FastAPI │   │-Plugin │                    │
+│  │-Realtime│   │-WebSocket│   │-Manager│                    │
+│  │-Streaming│   │-Dashboard│   │-Loader │                    │
+│  └────┬────┘   └───┬────┘   └───┬────┘                      │
+│       │             │             │                              │
+│  ┌────┴─────────────┴─────────────┴────┐                      │
+│  │              协议客户端            │                      │
+│  │   - Serial/UART                   │                      │
+│  │   - Bluetooth Low Energy (BLE)     │                      │
+│  └────────────────┬───────────────────┘                      │
+└───────────────────┬─────────────────────────────────────────────────┘
+                    │ USB-C / BLE / UART
+┌───────────────────┬─────────────────────────────────────────────────┐
+│                   │                                              │
+│  ┌────────────────┴─────────────────────────────────────────────┐   │
+│  │               ESP32-S3 固件 V2.0                          │   │
+│  └────────────────┬────────────────────────────────────────────┘   │
+│                   │                                               │
+│       ┌───────────┼───────────┐                                  │
+│       │           │           │                                  │
+│  ┌────┴────┐ ┌───┴────┐  ┌───┴────┐                           │
+│  │BLE管理器 │ │OTA管理器 │ │状态机  │                           │
+│  │-GATT    │ │-HTTP    │ │-FreeRTOS│                           │
+│  │-Character│ │-Partition│ │-Tasks  │                           │
+│  └──────────┘ └──────────┘  └───┬────┘                           │
+│                              │                                   │
+│  ┌─────────────────────────────┼─────────────────────────────┐   │
+│  │              硬件驱动层    │                             │   │
+│  │  - LED矩阵 (WS2812B)      │                             │   │
+│  │  - 舵机控制 (PWM)         │                             │   │
+│  │  - 音频 I2S               │                             │   │
+│  │  - 摄像头 OV5640          │                             │   │
+│  │  - 传感器 (VL53L0X, etc.)  │                             │   │
+│  └─────────────────────────────┴─────────────────────────────┘   │
+└───────────────────────────────────────────────────────────────────┘
 ```
 
-## 主机端架构
+## 主机端架构 V2.0
 
 ### 核心模块
 
-#### 1. 配置管理 (config.py)
+#### 1. Agent框架 (LangGraph)
 
 ```python
-ConfigManager
-├── SerialConfig      # 串口配置
-├── LLMConfig        # LLM配置
-├── VoiceConfig      # 语音配置
-├── VisionConfig     # 视觉配置
-├── BehaviorConfig   # 行为配置
-└── LogConfig       # 日志配置
+host/core/agent/
+├── agent_graph.py      # DashanAgent with StateGraph
+├── agent_state.py      # AgentState, AgentMessage
+├── agent_config.py    # AgentConfig
+└── tool_registry.py   # ToolRegistry, BaseTool
 ```
 
-**功能：**
-- YAML配置文件加载
-- 环境变量支持
-- 配置验证
-- 热重载支持
+**特性：**
+- LangGraph StateGraph多步推理
+- 工具调用和知识检索集成
+- 意图分类和响应生成
+- 可扩展的工具系统
 
-#### 2. 事件总线 (event_bus.py)
+**处理流程：**
+```
+input_processing → intent_classification → tool_selection 
+→ tool_execution → knowledge_retrieval → reasoning 
+→ response_generation → output_formatting
+```
+
+#### 2. RAG系统 (知识检索)
 
 ```python
-EventBus
-├── 订阅/取消订阅
-├── 发布事件
-├── 事件历史
-├── 等待事件
-└── 工作线程
+host/core/rag/
+├── knowledge_manager.py  # KnowledgeManager
+├── vector_store.py       # VectorStore (ChromaDB/FAISS)
+├── embedding_service.py  # EmbeddingService (SentenceTransformers)
+└── document_processor.py # DocumentProcessor
 ```
 
-**事件类型：**
-- WAKE_WORD_DETECTED - 唤醒词检测
-- SPEECH_RECOGNIZED - 语音识别完成
-- RESPONSE_GENERATED - LLM响应生成
-- SPEECH_SYNTHESIZED - 语音合成完成
-- STATE_CHANGED - 状态变化
-- EXPRESSION_CHANGED - 表情变化
-- SERVO_MOVED - 舵机移动
-- SENSOR_DATA_RECEIVED - 传感器数据
-- FACE_DETECTED - 人脸检测
-- GAZE_UPDATED - 注视更新
-- ERROR_OCCURRED - 错误发生
+**特性：**
+- ChromaDB持久化向量数据库
+- FAISS高性能向量搜索
+- 中文文本嵌入 (shibing624/text2vec-base-chinese)
+- 文档分块和预处理
 
-#### 3. 状态机 (state_machine.py)
+#### 3. 行为树系统
 
 ```python
-StateMachine
-├── 状态定义
-├── 状态转换
-├── 状态超时
-└── 回调处理
+host/core/behavior_tree/
+├── behavior_tree.py    # BehaviorTree, BaseNode
+├── nodes.py            # Sequence, Selector, Parallel
+├── decorators.py       # Retry, TimeLimit, Inverter
+├── leaf_nodes.py       # Action, Condition, Wait
+└── dashan_nodes.py     # DaShan-specific nodes
 ```
 
-**状态流转：**
+**节点类型：**
+- **Composite**: Sequence, Selector, Parallel
+- **Decorator**: Retry, TimeLimit, Inverter, Cooldown, Throttle
+- **Leaf**: Action, Condition, Wait, Random
+
+**行为树结构：**
 ```
-SLEEP -> WAKE -> LISTEN -> THINK -> TALK -> LISTEN
-        |        |         |        |
-        v        v         v        v
-     CHARGING   SLEEP    SLEEP    SLEEP
+Root
+├─ Emergency Sequence (紧急处理)
+│  ├─ Low Battery Condition
+│  └─ Sleep Action
+├─ Interaction Sequence (交互)
+│  ├─ User Detected Condition
+│  ├─ Wake Action
+│  ├─ Listen Sequence
+│  ├─ Think Sequence
+│  └─ Talk Sequence
+├─ Tracking Sequence (追踪)
+│  ├─ Face Detected Condition
+│  └─ Track Face Action
+├─ Idle Sequence (待机)
+│  ├─ Random Animation
+│  └─ Blink Eyes
+└─ Sleep Sequence (睡眠)
+   └─ Power Down
 ```
+
+#### 4. 实时语音系统
+
+```python
+host/modules/voice/
+├── realtime_stt.py    # RealtimeSTT with VAD
+└── streaming_tts.py   # StreamingTTS
+```
+
+**特性：**
+- RealtimeSTT流式语音识别
+- WebRTC VAD语音活动检测
+- Edge-TTS/Piper流式语音合成
+- 回声消除和降噪
+
+#### 5. Web仪表板
+
+```python
+host/web/
+├── api.py           # FastAPI应用
+└── websocket.py     # WebSocket处理
+```
+
+**特性：**
+- FastAPI + WebSocket实时通信
+- 内嵌HTML仪表板
+- 实时日志和系统状态
+- 远程控制和配置
+
+#### 6. 多模态融合
+
+```python
+host/core/multimodal/
+├── clip_encoder.py       # CLIPEncoder
+├── multimodal_fusion.py  # MultimodalFusion
+├── vision_language.py    # VisionLanguage
+└── emotion_recognition.py # EmotionRecognition
+```
+
+**特性：**
+- CLIP文本-图像编码
+- 加权求和融合
+- 注意力机制融合
+- 情感识别
+
+#### 7. 插件系统
+
+```python
+host/plugins/
+├── plugin_base.py      # Plugin, PluginInfo, PluginContext
+├── plugin_manager.py   # PluginManager
+├── plugin_loader.py    # PluginLoader
+└── examples/
+   ├─ hello_plugin.py   # 示例命令插件
+   ├─ memory_plugin.py  # 示例提供者插件
+   └─ content_filter.py # 示例过滤器插件
+```
+
+**插件类型：**
+- **Command**: 命令执行插件
+- **Filter**: 内容过滤插件
+- **Provider**: 数据提供插件
+- **Extension**: 扩展功能插件
 
 ### 功能模块
 
@@ -239,7 +305,7 @@ protocol/
     └── 消息处理
 ```
 
-## 机器人端架构
+## 机器人端架构 V2.0
 
 ### 固件模块
 
@@ -252,9 +318,11 @@ robot/main/
 │   ├── camera.c/h     # 摄像头驱动
 │   ├── audio.c/h      # 音频驱动
 │   └── sensor.c/h     # 传感器驱动
-└── components/         # 组件层
-    ├── protocol.c/h    # 协议处理
-    └── state_machine.c/h  # 状态机
+├── components/         # 组件层
+│   ├── protocol.c/h    # 协议处理
+│   └── state_machine.c/h  # 状态机
+├── ble_manager.c/h    # BLE GATT服务
+└── ota_manager.c/h    # OTA固件更新
 ```
 
 ### FreeRTOS任务
@@ -262,11 +330,51 @@ robot/main/
 ```c
 // 任务优先级（数值越小优先级越高）
 TASK_PRIORITY_PROTOCOL    (1)  // 协议处理
-TASK_PRIORITY_CAMERA     (2)  // 摄像头采集
-TASK_PRIORITY_AUDIO      (3)  // 音频处理
-TASK_PRIORITY_SENSOR     (4)  // 传感器读取
-TASK_PRIORITY_DISPLAY    (5)  // 显示更新
-TASK_PRIORITY_SERVO     (6)  // 舵机控制
+TASK_PRIORITY_BLE         (2)  // BLE通信
+TASK_PRIORITY_CAMERA     (3)  // 摄像头采集
+TASK_PRIORITY_AUDIO      (4)  // 音频处理
+TASK_PRIORITY_SENSOR     (5)  // 传感器读取
+TASK_PRIORITY_OTA        (6)  // OTA更新
+TASK_PRIORITY_DISPLAY    (7)  // 显示更新
+TASK_PRIORITY_SERVO     (8)  // 舵机控制
+```
+
+### BLE GATT服务
+
+```c
+// 特征定义
+CHARACTERISTIC_COMMAND     (0x2A01)  // 命令特征
+CHARACTERISTIC_STATUS      (0x2A02)  // 状态特征
+CHARACTERISTIC_DATA        (0x2A03)  // 数据特征
+CHARACTERISTIC_CONFIG      (0x2A04)  // 配置特征
+
+// 命令类型
+CMD_PING           (0x01)  // 心跳
+CMD_SET_EXPRESSION  (0x10)  // 设置表情
+CMD_SET_SERVO      (0x20)  // 设置舵机
+CMD_GET_STATUS     (0x30)  // 获取状态
+CMD_START_OTA      (0x40)  // 开始OTA
+CMD_RESTART        (0x50)  // 重启
+CMD_PLAY_AUDIO     (0x60)  // 播放音频
+```
+
+### OTA固件更新
+
+```c
+// OTA状态
+OTA_STATE_IDLE        (0x00)
+OTA_STATE_DOWNLOADING (0x01)
+OTA_STATE_WRITING    (0x02)
+OTA_STATE_VERIFYING  (0x03)
+OTA_STATE_REBOOTING  (0x04)
+OTA_STATE_ERROR      (0x05)
+
+// OTA错误码
+OTA_ERROR_INVALID_URL    (0x01)
+OTA_ERROR_CONNECT_FAILED (0x02)
+OTA_ERROR_DOWNLOAD_FAILED (0x03)
+OTA_ERROR_WRITE_FAILED   (0x04)
+OTA_ERROR_VERIFY_FAILED (0x05)
 ```
 
 ### 状态机
@@ -280,7 +388,9 @@ RobotState {
     TALK,       // 说话
     ERROR,      // 错误
     CHARGING,   // 充电
-    UPDATING    // 更新
+    UPDATING,   // OTA更新
+    BLE_CONNECTING, // BLE连接中
+    BLE_CONNECTED    // BLE已连接
 }
 ```
 

@@ -1,10 +1,12 @@
-# 通信协议文档
+# 通信协议文档 V2.0
 
 ## 概述
 
-本文档定义了机器人端(ESP32)与主机端(PC/Raspberry Pi)之间的串口通信协议。
+本文档定义了机器人端(ESP32)与主机端(PC/Raspberry Pi)之间的通信协议。V2.0支持UART/USB-C串口和Bluetooth Low Energy (BLE)两种通信方式。
 
-## 通信参数
+## 通信方式
+
+### UART/USB-C
 
 - **接口**: UART / USB-CDC
 - **波特率**: 115200
@@ -12,6 +14,18 @@
 - **停止位**: 1
 - **校验位**: None
 - **流控**: None
+
+### Bluetooth Low Energy (BLE)
+
+- **设备名称**: DaShan-Robot
+- **MTU**: 512 bytes
+- **最大连接数**: 1
+- **服务UUID**: 0x180A
+- **特征UUID**:
+  - COMMAND: 0x2A01
+  - STATUS: 0x2A02
+  - DATA: 0x2A03
+  - CONFIG: 0x2A04
 
 ## 帧格式
 
@@ -329,6 +343,94 @@ CMD:  0x0C
 LEN:  0x0001
 DATA:
   - status: uint8_t (0=成功, 1=失败)
+CRC:  (计算)
+```
+
+### OTA更新 (0x0D)
+
+#### 主机 → 机器人 (开始OTA)
+
+```
+HEAD: 0xAA
+CMD:  0x0D
+LEN:  0x0005 + N
+DATA:
+  - action: uint8_t (1=开始, 2=取消)
+  - auto_reboot: uint8_t (0=不重启, 1=自动重启)
+  - url_length: uint8_t (URL长度)
+  - firmware_url: N字节 (固件URL)
+CRC:  (计算)
+```
+
+#### 机器人 → 主机 (OTA状态)
+
+```
+HEAD: 0xAA
+CMD:  0x0D
+LEN:  0x0006
+DATA:
+  - state: uint8_t (OTA状态)
+  - progress: uint8_t (进度0-100)
+  - error_code: uint8_t (错误码，0=无错误)
+CRC:  (计算)
+```
+
+**OTA状态定义**:
+- 0x00: IDLE (空闲)
+- 0x01: DOWNLOADING (下载中)
+- 0x02: WRITING (写入中)
+- 0x03: VERIFYING (验证中)
+- 0x04: REBOOTING (重启中)
+- 0x05: ERROR (错误)
+
+### 重启设备 (0x0E)
+
+#### 主机 → 机器人
+
+```
+HEAD: 0xAA
+CMD:  0x0E
+LEN:  0x0001
+DATA:
+  - delay: uint8_t (延迟秒数，0=立即)
+CRC:  (计算)
+```
+
+#### 机器人 → 主机 (响应)
+
+```
+HEAD: 0xAA
+CMD:  0x0E
+LEN:  0x0001
+DATA:
+  - status: uint8_t (0=确认重启)
+CRC:  (计算)
+```
+
+### BLE配置 (0x0F)
+
+#### 主机 → 机器人
+
+```
+HEAD: 0xAA
+CMD:  0x0F
+LEN:  0x0002
+DATA:
+  - action: uint8_t (1=启用, 2=禁用, 3=获取状态)
+  - mtu: uint8_t (MTU大小，128-512)
+CRC:  (计算)
+```
+
+#### 机器人 → 主机 (响应)
+
+```
+HEAD: 0xAA
+CMD:  0x0F
+LEN:  0x0004
+DATA:
+  - enabled: uint8_t (0=禁用, 1=启用)
+  - mtu: uint8_t (当前MTU)
+  - connected: uint8_t (0=未连接, 1=已连接)
 CRC:  (计算)
 ```
 
